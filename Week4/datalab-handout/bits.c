@@ -170,207 +170,156 @@ NOTES:
    - 285 hentaigana
    - 3 additional Zanabazar Square characters */
 /* We do not support C11 <threads.h>.  */
-//1
 /* 
- * bitXor - x^y using only ~ and & 
- *   Example: bitXor(4, 5) = 1
- *   Legal ops: ~ &
- *   Max ops: 14
- *   Rating: 1
- */
-int bitXor(int x, int y) {
-    return ~(x&y) & ~(~x&~y);
-}
-/* 
- * tmin - return minimum two's complement integer 
+ * logicalShift - shift x to the right by n, using a logical shift
+ *   Can assume that 0 <= n <= 31
+ *   Examples: logicalShift(0x87654321,4) = 0x08765432
  *   Legal ops: ! ~ & ^ | + << >>
- *   Max ops: 4
+ *   Max ops: 20
+ *   Rating: 3 
+ */
+int logicalShift(int x, int n) {
+  int mask = ((1<<31)>>n)<<1;
+  return (x>>n) & ~mask;
+}
+/* 
+ * remainderPower2 - Compute x%(2^n), for 0 <= n <= 30
+ *   Negative arguments should yield negative remainders
+ *   Examples: remainderPower2(15,2) = 3, remainderPower2(-35,3) = -3
+ *   Legal ops: ! ~ & ^ | + << >>
+ *   Max ops: 20
+ *   Rating: 3
+ */
+int remainderPower2(int x, int n) {
+    int check = ~0+(1<<n);
+    int sign = (x>>31)&check;
+    int div = (x+sign)>>n;
+    int negdiv = ~div+1;
+    return x+(negdiv<<n);
+}
+/* 
+ * specialBits - return bit pattern 0xffca3fff
+ *   Legal ops: ! ~ & ^ | + << >>
+ *   Max ops: 3
  *   Rating: 1
  */
-int tmin(void) {
-  return 1 << 31;
+int specialBits(void) {
+    return ~(0xd7<<14);
 }
-//2
-/*
- * isTmax - returns 1 if x is the maximum, two's complement number,
- *     and 0 otherwise 
- *   Legal ops: ! ~ & ^ | +
+/* 
+ * floatAbsVal - Return bit-level equivalent of absolute value of f for
+ *   floating point argument f.
+ *   Both the argument and result are passed as unsigned int's, but
+ *   they are to be interpreted as the bit-level representations of
+ *   single-precision floating point values.
+ *   When argument is NaN, return argument..
+ *   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while
  *   Max ops: 10
- *   Rating: 1
- */
-int isTmax(int x) {
-  int i = x+1;   //i=tmin if x is Tmax
-  int j = i + x; //j=umax if x is Tmax 
-  return !(~j | !(i));
-}
-/* 
- * allOddBits - return 1 if all odd-numbered bits in word set to 1
- *   where bits are numbered from 0 (least significant) to 31 (most significant)
- *   Examples allOddBits(0xFFFFFFFD) = 0, allOddBits(0xAAAAAAAA) = 1
- *   Legal ops: ! ~ & ^ | + << >>
- *   Max ops: 12
  *   Rating: 2
  */
-int allOddBits(int x) {
-  int i = 0xAA;
-  i = i + (0xAA<<8);
-  i = i + (0xAA<<16);
-  i = i + (0xAA<<24);
-  return !((x&i)^i);
+unsigned floatAbsVal(unsigned uf) {
+  int sign=~(1<<31);
+  int NaN=0x7f800001;
+  if( (sign&uf)>=NaN ) return uf;
+  else return sign&uf;
 }
 /* 
- * negate - return -x 
- *   Example: negate(1) = -1.
- *   Legal ops: ! ~ & ^ | + << >>
- *   Max ops: 5
- *   Rating: 2
- */
-int negate(int x) {
-  return ~x + 1;
-}
-//3
-/* 
- * isAsciiDigit - return 1 if 0x30 <= x <= 0x39 (ASCII codes for characters '0' to '9')
- *   Example: isAsciiDigit(0x35) = 1.
- *            isAsciiDigit(0x3a) = 0.
- *            isAsciiDigit(0x05) = 0.
- *   Legal ops: ! ~ & ^ | + << >>
- *   Max ops: 15
- *   Rating: 3
- */
-int isAsciiDigit(int x) {
-  int neg_min = ~0x30+1;
-  int neg_x = ~x+1;
-  int x_minus_min = x + neg_min;
-  int max_minus_x = 0x39 + neg_x;
-  int sign_min = x_minus_min>>31;
-  int sign_max = max_minus_x>>31;
-  return !(sign_min | sign_max);
-}
-/* 
- * conditional - same as x ? y : z 
- *   Example: conditional(2,4,5) = 4
- *   Legal ops: ! ~ & ^ | + << >>
- *   Max ops: 16
- *   Rating: 3
- */
-int conditional(int x, int y, int z) { 
-  int x_bang = !x;
-  int result = 0 + (~x_bang+1); //result either 0x00..0 or 0xff..f 
-  return (result & z) | (~result & y);
-}
-/* 
- * isLessOrEqual - if x <= y  then return 1, else return 0 
- *   Example: isLessOrEqual(4,5) = 1.
- *   Legal ops: ! ~ & ^ | + << >>
- *   Max ops: 24
- *   Rating: 3
- */
-int isLessOrEqual(int x, int y) {
-  int compare_sign = !(x>>31 ^ y>>31);  
-  int y_minus_x = y + (~x+1);    
-  int a = compare_sign & !(y_minus_x>>31);
-  int b = !(compare_sign) & (x>>31);             
-  return a|b;
-}
-//4
-/* 
- * logicalNeg - implement the ! operator, using all of 
- *              the legal operators except !
- *   Examples: logicalNeg(3) = 0, logicalNeg(0) = 1
- *   Legal ops: ~ & ^ | + << >>
- *   Max ops: 12
- *   Rating: 4 
- */
-int logicalNeg(int x) {
-  int zero = (~x+1) | x;
-  int sign = zero>>31;
-  int compare = 1 & sign;
-  return compare^1;
-}
-/* howManyBits - return the minimum number of bits required to represent x in
- *             two's complement
- *  Examples: howManyBits(12) = 5
- *            howManyBits(298) = 10
- *            howManyBits(-5) = 4
- *            howManyBits(0)  = 1
- *            howManyBits(-1) = 1
- *            howManyBits(0x80000000) = 32
- *  Legal ops: ! ~ & ^ | + << >>
- *  Max ops: 90
- *  Rating: 4
- */
-int howManyBits(int x) {
-    
-  int shift,n=0;
-
-  //x = x<0 ? -x-1 : x;
-  int sign = x >> 31;
-  x = (sign & ~x) | (~sign & x);
-  
-  shift = (!!(x & (~0<<16))) << 4;
-  x>>= shift;
-  n+=shift;
-
-  shift = (!!(x & (~0<<8))) << 3;
-  x>>= shift;
-  n+=shift;
-
-  shift = (!!(x & (~0<<4))) << 2;
-  x>>= shift;
-  n+=shift;
-
-  shift = (!!(x & (~0<<2))) << 1;
-  x>>= shift;
-  n+=shift;
-
-  shift = !!(x & (~0<<1));
-  x>>= shift;
-  n+=shift;
-
-  shift = !!(x & ~0);
-  x>>= shift;
-  n+=shift;
-
-  return n+1;
-}
-//float
-/* 
- * floatFloat2Int - Return bit-level equivalent of expression (int) f
- *   for floating point argument f.
- *   Argument is passed as unsigned int, but
- *   it is to be interpreted as the bit-level representation of a
- *   single-precision floating point value.
- *   Anything out of range (including NaN and infinity) should return
- *   0x80000000u.
+ * floatScale4 - Return bit-level equivalent of expression 4*f for
+ *   floating point argument f.
+ *   Both the argument and result are passed as unsigned int's, but
+ *   they are to be interpreted as the bit-level representation of
+ *   single-precision floating point values.
+ *   When argument is NaN, return argument
  *   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while
  *   Max ops: 30
  *   Rating: 4
  */
-int floatFloat2Int(unsigned uf) {
-  int exp = (uf >> 23) & 0xFF;
-  int bias = 127;
-  int frac = (uf & 0x7FFFFF) | (1 << 23);
-  int sign = (uf >> 31) & 1;
-  int e = exp - bias;
-  int m;
-
-  if (e < 0)
-    return 0;
-
-  if (e > 30)
-    return 0x80000000;
-
-  if (e <= 30 && e >= 0) {
-    if (e > 23)
-      m = frac << (e - 23);
-    else
-      m = frac >> (23 - e);
-
-    if (sign == 0)
-      return m;
-    else
-      return -m;
-  }
+unsigned floatScale4(unsigned uf) {
+    int NaN=0x7f800001,sign,exp,frac,mask,frac_sign;
+    if( ((uf&0x7fffffff)>=NaN) ) return uf;
+    
+    sign = uf>>31;
+    exp = uf<<1>>24;
+    mask = 0x7fffff;
+    frac = uf&mask;
+    frac_sign = frac>>21;
+    
+    if(exp==0){
+    	if(!!frac_sign==1){
+    		frac= (frac<<1)&mask;
+    		exp+=2;
+    	}else{
+    		frac = (frac<<2)&mask;
+    	}
+    	
+    }else{
+    	exp+=2;
+    }
+    
+    if(exp+2>=255) return (sign<<31)|0x7f800000;
+    
+    return (sign<<31)|(exp<<23)|(frac);
 }
-
+/* 
+ * floatNegate - Return bit-level equivalent of expression -f for
+ *   floating point argument f.
+ *   Both the argument and result are passed as unsigned int's, but
+ *   they are to be interpreted as the bit-level representations of
+ *   single-precision floating point values.
+ *   When argument is NaN, return argument.
+ *   Legal ops: Any integer/unsigned operations incl. ||, &&. also if, while
+ *   Max ops: 10
+ *   Rating: 2
+ */
+unsigned floatNegate(unsigned uf) {
+ int negate = uf^0x80000000;
+ int NaN_exp=(uf>>23)&0xff;
+ int frac= uf&0x7fffff;
+ if(NaN_exp==0xff && frac!=0) return uf;
+ else return negate;
+}
+/*
+ * satMul2 - multiplies by 2, saturating to Tmin or Tmax if overflow
+ *   Examples: satMul2(0x30000000) = 0x60000000
+ *             satMul2(0x40000000) = 0x7FFFFFFF (saturate to TMax)
+ *             satMul2(0x80000001) = 0x80000000 (saturate to TMin)
+ *   Legal ops: ! ~ & ^ | + << >>
+ *   Max ops: 20
+ *   Rating: 3
+ */
+int satMul2(int x) {
+  int mul2 = x<<1;
+  int if_overflow = (x^mul2)>>31; //return 1's if overflow, else 0.
+  int tmin = 1<<31;
+  int overflow = (mul2>>31)^tmin; //return tmax if x is positive, else tmin
+  return ((~if_overflow)&mul2) | (overflow&if_overflow);
+}
+/* 
+ * thirdBits - return word with every third bit (starting from the LSB) set to 1
+ *   Legal ops: ! ~ & ^ | + << >>
+ *   Max ops: 8
+ *   Rating: 1
+ */
+int thirdBits(void) {
+  int i=1;
+  i=(i<<3)+1;
+  i=i+(i<<6);
+  i=i+(i<<12);
+  i=i+(i<<24);
+  return i;
+}
+/* 
+ * signMag2TwosComp - Convert from sign-magnitude to two's complement
+ *   where the MSB is the sign bit
+ *   Example: signMag2TwosComp(0x80000005) = -5.
+ *   Legal ops: ! ~ & ^ | + << >>
+ *   Max ops: 15
+ *   Rating: 4
+ */
+int signMag2TwosComp(int x) {
+  int sign = x>>31;
+  int mask = ~(1<<31);
+  int change_sign = x & mask;
+  int invert = ~(change_sign);
+  return ((invert+1)&sign) | ((~sign)&x);
+}
