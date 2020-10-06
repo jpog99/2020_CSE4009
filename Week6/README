@@ -1,0 +1,15 @@
+System Programming - Fall 2020 
+
+[Week6] bomblab assignment materials:
+
+- bomb			: An executable file to find answers for each phase by gdb debugging 
+
+- bomb.c		: A code of description which helps you to understand flow of "bomb" program
+
+- BOMB_TAG		: An unique tag which defines your bomb and student ID 
+	
+- solution_format.txt	: The only file you will modify in this folder. Replace each line with the answer that you found through debugging
+
+- README		: The file you are currently looking at
+
+
