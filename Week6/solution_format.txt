@@ -1,7 +1,7 @@
-phase1_answer
-phase2_answer
-phase3_answer
-phase4_answer
-phase5_answer
-phase6_answer
+Border relations with Canada have never been better.
+1 2 4 7 11 16
+6 127
+6 6
+mfcdxw
+3 1 6 5 4 2
 secret_phase_answer (optional)
