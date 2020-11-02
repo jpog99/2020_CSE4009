@@ -17,7 +17,7 @@ int Pop(Stack *stack);
 
 
 int main(void){
-    Stack *s;
+    Stack s;
     InitializeStack(&s);
 
     Push(&s,10);
